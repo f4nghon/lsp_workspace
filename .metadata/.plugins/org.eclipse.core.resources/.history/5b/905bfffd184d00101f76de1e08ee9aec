@@ -1,0 +1,5 @@
+package com.vogella.lsp.asciidoc.client;
+
+public class ConnectionProviderSolution {
+
+}

@@ -1,0 +1,215 @@
+package com.vogella.lsp.asciidoc.server;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
+
+import org.eclipse.lsp4j.CodeAction;
+import org.eclipse.lsp4j.CodeActionParams;
+import org.eclipse.lsp4j.CodeLens;
+import org.eclipse.lsp4j.CodeLensParams;
+import org.eclipse.lsp4j.Command;
+import org.eclipse.lsp4j.CompletionItem;
+import org.eclipse.lsp4j.CompletionList;
+import org.eclipse.lsp4j.CompletionParams;
+import org.eclipse.lsp4j.DefinitionParams;
+import org.eclipse.lsp4j.DidChangeTextDocumentParams;
+import org.eclipse.lsp4j.DidCloseTextDocumentParams;
+import org.eclipse.lsp4j.DidOpenTextDocumentParams;
+import org.eclipse.lsp4j.DidSaveTextDocumentParams;
+import org.eclipse.lsp4j.DocumentFormattingParams;
+import org.eclipse.lsp4j.DocumentOnTypeFormattingParams;
+import org.eclipse.lsp4j.DocumentRangeFormattingParams;
+import org.eclipse.lsp4j.DocumentSymbol;
+import org.eclipse.lsp4j.DocumentSymbolParams;
+import org.eclipse.lsp4j.Hover;
+import org.eclipse.lsp4j.HoverParams;
+import org.eclipse.lsp4j.InsertTextFormat;
+import org.eclipse.lsp4j.Location;
+import org.eclipse.lsp4j.LocationLink;
+import org.eclipse.lsp4j.MarkupContent;
+import org.eclipse.lsp4j.MarkupKind;
+import org.eclipse.lsp4j.Position;
+import org.eclipse.lsp4j.Range;
+import org.eclipse.lsp4j.RenameParams;
+import org.eclipse.lsp4j.SymbolInformation;
+import org.eclipse.lsp4j.SymbolKind;
+import org.eclipse.lsp4j.TextEdit;
+import org.eclipse.lsp4j.WorkspaceEdit;
+import org.eclipse.lsp4j.jsonrpc.messages.Either;
+import org.eclipse.lsp4j.services.TextDocumentService;
+
+public class AsciidocTextDocumentService implements TextDocumentService {
+    private final Map<String, AsciidocDocumentModel> docs = Collections.synchronizedMap(new HashMap<>());
+
+    private final AsciidocLanguageServer languageServer;
+
+    public AsciidocTextDocumentService(AsciidocLanguageServer languageServer) {
+        this.languageServer = languageServer;
+    }
+
+    @Override
+    public CompletableFuture<Either<List<CompletionItem>, CompletionList>> completion(CompletionParams position) {
+        return CompletableFuture.supplyAsync(() -> {
+            // The source template with a cursor position placeholder
+            String sourceTemplateWithCursor = "\"";
+
+
+            // Create a list of CompletionItem objects, including cursor position in insertText
+            List<CompletionItem> completionItems = AsciidocElements.INSTANCE.suggestions.entrySet().stream()
+                .map(entry -> {
+                    CompletionItem item = new CompletionItem();
+                    item.setLabel(entry.getKey());        // Use the key as the label
+                    item.setInsertText(entry.getValue() + "\n$0"); // Add the placeholder cursor at the appropriate position
+                    item.setInsertTextFormat(InsertTextFormat.Snippet); // Use snippet format to support cursor placeholders
+                    return item;
+                })
+                .collect(Collectors.toList());
+
+            // Return the result wrapped in Either.forLeft
+            return Either.forLeft(completionItems);
+        });
+    }
+
+    @Override
+    public CompletableFuture<CompletionItem> resolveCompletionItem(CompletionItem unresolved) {
+        return null;
+    }
+
+    public CompletableFuture<Either<List<? extends Location>, List<? extends LocationLink>>> definition(
+            DefinitionParams params) {
+        return null;
+    }
+
+
+
+    @Override
+    public CompletableFuture<List<Either<Command, CodeAction>>> codeAction(CodeActionParams params) {
+        return CompletableFuture.completedFuture(Collections.emptyList());
+    }
+
+    @Override
+    public CompletableFuture<List<? extends CodeLens>> codeLens(CodeLensParams params) {
+        return null;
+    }
+
+    @Override
+    public CompletableFuture<CodeLens> resolveCodeLens(CodeLens unresolved) {
+        return null;
+    }
+
+    @Override
+    public CompletableFuture<List<? extends TextEdit>> formatting(DocumentFormattingParams params) {
+        return null;
+    }
+
+    @Override
+    public CompletableFuture<List<? extends TextEdit>> rangeFormatting(DocumentRangeFormattingParams params) {
+        return null;
+    }
+
+    @Override
+    public CompletableFuture<List<? extends TextEdit>> onTypeFormatting(DocumentOnTypeFormattingParams params) {
+        return null;
+    }
+
+    @Override
+    public CompletableFuture<WorkspaceEdit> rename(RenameParams params) {
+        return null;
+    }
+
+    @Override
+    public void didOpen(DidOpenTextDocumentParams params) {
+        AsciidocDocumentModel model = new AsciidocDocumentModel(params.getTextDocument().getText());
+        this.docs.put(params.getTextDocument().getUri(), model);
+    }
+
+    @Override
+    public void didChange(DidChangeTextDocumentParams params) {
+        AsciidocDocumentModel model = new AsciidocDocumentModel(params.getContentChanges().get(0).getText());
+        this.docs.put(params.getTextDocument().getUri(), model);
+    }
+
+    @Override
+    public void didClose(DidCloseTextDocumentParams params) {
+        this.docs.remove(params.getTextDocument().getUri());
+    }
+    
+    @Override
+    public void didSave(DidSaveTextDocumentParams params) {
+    }
+    
+    @Override
+    public CompletableFuture<List<Either<SymbolInformation, DocumentSymbol>>> documentSymbol(
+            DocumentSymbolParams params) {
+        return CompletableFuture.supplyAsync(() -> {
+            // Create a list to hold the symbols
+            List<Either<SymbolInformation, DocumentSymbol>> symbols = new ArrayList<>();
+
+            // Create a symbol for a class
+            DocumentSymbol classSymbol = new DocumentSymbol();
+            classSymbol.setName("MyClass");
+            classSymbol.setKind(SymbolKind.Class);
+            classSymbol.setRange(new Range(new Position(0, 0), new Position(0, 10)));
+            classSymbol.setSelectionRange(new Range(new Position(0, 0), new Position(0, 10)));
+
+            // Create a symbol for a method inside the class
+            DocumentSymbol methodSymbol = new DocumentSymbol();
+            methodSymbol.setName("myMethod");
+            methodSymbol.setKind(SymbolKind.Method);
+            methodSymbol.setRange(new Range(new Position(1, 0), new Position(1, 10)));
+            methodSymbol.setSelectionRange(new Range(new Position(1, 0), new Position(1, 10)));
+
+            // Add the method symbol as a child of the class symbol
+            classSymbol.setChildren(List.of(methodSymbol));
+
+            // Add the class symbol to the list of symbols
+            symbols.add(Either.forRight(classSymbol));
+
+            // Return the list of symbols
+            return symbols;
+        });
+    }
+    
+    @Override
+    public CompletableFuture<Hover> hover(HoverParams params) {
+        return CompletableFuture.supplyAsync(() -> {
+            // Get the position where the hover request was made
+            Position position = params.getPosition();
+            // get file if necessary
+//          String uri = params.getTextDocument().getUri();
+
+            // We hover only after the first line
+            if (position.getLine() > 0) {
+
+                String content = """
+                        ![Info Icon]
+
+                        **Important AsciiDoc Elements:**
+
+                        * `image::` - Defines an image element in AsciiDoc files.
+                        * `include::` - Includes other AsciiDoc files into the current one.
+
+                        **Usage Example:**
+                        ```asciidoc
+                        image::path/to/image.png[]
+                        include::example.adoc[]
+                        ```
+                        """;
+
+                // Create the Hover object with content in markdown format
+                Hover hover = new Hover();
+                MarkupContent markupContent = new MarkupContent(MarkupKind.MARKDOWN, content);
+                hover.setContents(new MarkupContent(MarkupKind.MARKDOWN, content));
+                return hover;
+            }
+
+            // If no specific syntax is matched, return null or empty hover
+            return null;
+        });
+    }
+}

@@ -1,0 +1,5 @@
+package com.vogella.lsp.asciidoc.server;
+
+public class AsciidocTextDocumentService {
+
+}

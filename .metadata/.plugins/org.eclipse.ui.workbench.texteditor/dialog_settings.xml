@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<section name="Workbench">
+	<item key="hasShownOverlayPopupBefore" value="true"/>
+	<section name="java.lang.Class">
+		<item key="replaceBarOpen" value="false"/>
+		<list key="findhistory">
+			<item value="trace"/>
+			<item value="setTrace"/>
+			<item value="txt"/>
+			<item value="codeLen"/>
+			<item value="codeAct"/>
+			<item value="didop"/>
+			<item value="validate"/>
+			<item value="definition("/>
+			<item value="definition"/>
+			<item value="documentS§"/>
+			<item value="documentSymbol"/>
+			<item value="documentS"/>
+			<item value="compl"/>
+		</list>
+	</section>
+</section>

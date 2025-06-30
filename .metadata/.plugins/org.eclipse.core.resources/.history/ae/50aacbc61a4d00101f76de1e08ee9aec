@@ -1,0 +1,111 @@
+package com.vogella.lsp.asciidoc.server;
+
+import java.util.concurrent.CompletableFuture;
+
+import org.eclipse.lsp4j.CompletionOptions;
+import org.eclipse.lsp4j.Hover;
+import org.eclipse.lsp4j.HoverParams;
+import org.eclipse.lsp4j.InitializeParams;
+import org.eclipse.lsp4j.InitializeResult;
+import org.eclipse.lsp4j.MarkupKind;
+import org.eclipse.lsp4j.Position;
+import org.eclipse.lsp4j.ServerCapabilities;
+import org.eclipse.lsp4j.TextDocumentSyncKind;
+import org.eclipse.lsp4j.services.LanguageClient;
+import org.eclipse.lsp4j.services.LanguageServer;
+import org.eclipse.lsp4j.services.TextDocumentService;
+import org.eclipse.lsp4j.services.WorkspaceService;	
+
+public class AsciidocLanguageServer implements LanguageServer {
+
+    private TextDocumentService textService;
+    private WorkspaceService workspaceService;
+    LanguageClient client;
+
+    public AsciidocLanguageServer() {
+        textService = new AsciidocTextDocumentService(this);
+        workspaceService = new AsciidocWorkspaceService();
+    }
+
+    /**
+     * Here we tell the framework which functionality our server supports
+     */
+    @Override
+    public CompletableFuture<InitializeResult> initialize(InitializeParams params) {
+        final InitializeResult res = new InitializeResult(new ServerCapabilities());
+        res.getCapabilities().setTextDocumentSync(TextDocumentSyncKind.Full);
+        res.getCapabilities().setCompletionProvider(new CompletionOptions());
+        res.getCapabilities().setDocumentSymbolProvider(Boolean.TRUE);
+        res.getCapabilities().setHoverProvider(Boolean.TRUE);
+//      res.getCapabilities().setDefinitionProvider(Boolean.TRUE);
+//      res.getCapabilities().setReferencesProvider(Boolean.TRUE);
+        // res.getCapabilities().setCodeActionProvider(Boolean.TRUE);
+
+        return CompletableFuture.supplyAsync(() -> res);
+    }
+
+    @Override
+    public CompletableFuture<Object> shutdown() {
+        return CompletableFuture.supplyAsync(() -> {
+            return Boolean.FALSE;
+        });
+    }
+
+    @Override
+    public void exit() {
+        System.out.println("Shutdown");
+    }
+
+    @Override
+    public TextDocumentService getTextDocumentService() {
+        return this.textService;
+    }
+
+    @Override
+    public WorkspaceService getWorkspaceService() {
+        return this.workspaceService;
+    }
+    
+
+    public void setRemoteProxy(LanguageClient remoteProxy) {
+        this.client = remoteProxy;
+    }
+    
+    @Override
+    public CompletableFuture<Hover> hover(HoverParams params) {
+        return CompletableFuture.supplyAsync(() -> {
+            // Get the position where the hover request was made
+            Position position = params.getPosition();
+            // get file if necessary
+//          String uri = params.getTextDocument().getUri();
+
+            // We hover only after the first line
+            if (position.getLine() > 0) {
+
+                String content = """
+                        ![Info Icon]
+
+                        **Important AsciiDoc Elements:**
+
+                        * `image::` - Defines an image element in AsciiDoc files.
+                        * `include::` - Includes other AsciiDoc files into the current one.
+
+                        **Usage Example:**
+                        ```asciidoc
+                        image::path/to/image.png[]
+                        include::example.adoc[]
+                        ```
+                        """;
+
+                // Create the Hover object with content in markdown format
+                Hover hover = new Hover();
+                hover.setContents(new MarkupContent(MarkupKind.MARKDOWN, content));
+                return hover;
+            }
+
+            // If no specific syntax is matched, return null or empty hover
+            return null;
+        });
+    }
+
+}
