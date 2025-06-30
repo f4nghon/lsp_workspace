@@ -1,0 +1,6 @@
+/Users/rafalkosinski/Documents/eclipse-workspace/com.vogella.lsp.asciidoc.server/src/main/java/com/vogella/languageserver/asciidoc/Main.java
+/Users/rafalkosinski/Documents/eclipse-workspace/com.vogella.lsp.asciidoc.server/src/main/java/com/vogella/lsp/asciidoc/server/AsciidocDocumentModel.java
+/Users/rafalkosinski/Documents/eclipse-workspace/com.vogella.lsp.asciidoc.server/src/main/java/com/vogella/lsp/asciidoc/server/AsciidocElements.java
+/Users/rafalkosinski/Documents/eclipse-workspace/com.vogella.lsp.asciidoc.server/src/main/java/com/vogella/lsp/asciidoc/server/AsciidocLanguageServer.java
+/Users/rafalkosinski/Documents/eclipse-workspace/com.vogella.lsp.asciidoc.server/src/main/java/com/vogella/lsp/asciidoc/server/AsciidocTextDocumentService.java
+/Users/rafalkosinski/Documents/eclipse-workspace/com.vogella.lsp.asciidoc.server/src/main/java/com/vogella/lsp/asciidoc/server/AsciidocWorkspaceService.java
